@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Score Control Panel</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #eef2f5;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .teams {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .team {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .score {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .controls button {
+            margin: 5px;
+            padding: 8px 16px;
+            border: none;
+            background: #007BFF;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .controls button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🎮 Control Panel - Update Scores</h1>
+    <div class="teams" id="teamsContainer"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBXJ_RnfjUDi7qPDATWVnS5lSFw6jVRYgo",
+            authDomain: "shopping-e284c.firebaseapp.com",
+            databaseURL: "https://shopping-e284c-default-rtdb.firebaseio.com",
+            projectId: "shopping-e284c",
+            storageBucket: "shopping-e284c.appspot.com",
+            messagingSenderId: "248274428739",
+            appId: "1:248274428739:web:fc30dd9eb1ef83f610c5f6",
+            measurementId: "G-ZXZCK9BW7T"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const teams = ["Team A", "Team B", "Team C", "Team D", "Team E", "Team F", "Team G"];
+        const container = document.getElementById('teamsContainer');
+
+        teams.forEach(team => {
+            const teamId = team.replace(/\s/g, '_');
+
+            const div = document.createElement('div');
+            div.className = 'team';
+            div.innerHTML = `
+        <h2>${team}</h2>
+        <div class="score" id="score_${teamId}">0</div>
+        <div class="controls">
+          <button onclick="updateScore('${teamId}', 1)">+1</button>
+          <button onclick="updateScore('${teamId}', -1)">-1</button>
+        </div>
+      `;
+            container.appendChild(div);
+
+            db.ref(`scores/${teamId}`).on('value', snapshot => {
+                const score = snapshot.val() || 0;
+                document.getElementById(`score_${teamId}`).textContent = score;
+            });
+        });
+
+        function updateScore(teamId, delta) {
+            const ref = db.ref(`scores/${teamId}`);
+            ref.transaction(current => {
+                const updated = (current || 0) + delta;
+                const safe = updated < 0 ? 0 : updated;
+                console.log(`Updating ${teamId}: ${current} + ${delta} = ${safe}`);
+                return safe;
+            }, (error, committed, snapshot) => {
+                if (error) {
+                    console.error("Transaction failed: ", error);
+                } else if (!committed) {
+                    console.warn("Transaction not committed");
+                } else {
+                    console.log("Transaction success!", snapshot.val());
+                }
+            });
+        }
+
+    </script>
+</body>
+
+</html>

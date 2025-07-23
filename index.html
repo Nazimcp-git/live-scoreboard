@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Live Scoreboard</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --card-bg: #ffffff;
+      --primary: #1a237e;
+      --accent: #00acc1;
+      --score: #d84315;
+      --border: #e0e0e0;
+      --text: #333333;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      padding: 30px 20px 15px;
+      text-align: center;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      color: var(--primary);
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .teams {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+      gap: 24px;
+      padding: 30px 40px;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .team {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    }
+
+    .team h2 {
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: var(--accent);
+      margin: 0;
+    }
+
+    .score {
+      font-size: 2.8rem;
+      font-weight: 600;
+      color: var(--score);
+    }
+
+    @media (max-width: 768px) {
+      .teams {
+        grid-template-columns: 1fr;
+        padding: 20px;
+      }
+
+      .team {
+        flex-direction: column;
+        text-align: center;
+        gap: 16px;
+      }
+
+      .team h2 {
+        font-size: 1.4rem;
+      }
+
+      .score {
+        font-size: 2.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🏆 7-Team Live Scoreboard</h1>
+  </header>
+
+  <section class="teams" id="teamsContainer"></section>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXJ_RnfjUDi7qPDATWVnS5lSFw6jVRYgo",
+      authDomain: "shopping-e284c.firebaseapp.com",
+      databaseURL: "https://shopping-e284c-default-rtdb.firebaseio.com",
+      projectId: "shopping-e284c",
+      storageBucket: "shopping-e284c.appspot.com",
+      messagingSenderId: "248274428739",
+      appId: "1:248274428739:web:fc30dd9eb1ef83f610c5f6",
+      measurementId: "G-ZXZCK9BW7T"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const teams = ["Team A", "Team B", "Team C", "Team D", "Team E", "Team F", "Team G"];
+    const container = document.getElementById('teamsContainer');
+
+    teams.forEach(team => {
+      const teamId = team.replace(/\s/g, '_');
+
+      const div = document.createElement('div');
+      div.className = 'team';
+      div.innerHTML = `
+        <h2>${team}</h2>
+        <div class="score" id="score_${teamId}">0</div>
+      `;
+      container.appendChild(div);
+
+      db.ref(`scores/${teamId}`).on('value', snapshot => {
+        const score = snapshot.val() || 0;
+        document.getElementById(`score_${teamId}`).textContent = score;
+      });
+    });
+  </script>
+</body>
+</html>
