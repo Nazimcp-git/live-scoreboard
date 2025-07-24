@@ -54,6 +54,18 @@
 
 <body>
     <h1>🎮 Control Panel - Update Scores</h1>
+    <button style="margin-bottom: 40px;" onclick="resetScores()">Reset All</button>
+    
+
+<script>
+  function resetScores() {
+    teams.forEach(team => {
+      const teamId = team.replace(/\s/g, '_');
+      db.ref(`scores/${teamId}`).set(0);
+    });
+  }
+</script>
+
     <div class="teams" id="teamsContainer"></div>
 
     <!-- Firebase SDK -->
@@ -75,7 +87,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const teams = ["Team A", "Team B", "Team C", "Team D", "Team E", "Team F", "Team G"];
+        const teams = ["DUDU Thootha", "DNAC Koonanchery", "NIHA Pattambi", "SHIA Kuttikkatoor", "MDIA Thalankara", "SHIC Parappur", "DIIA Pandikkad", "AHIA Kalamassery"];
         const container = document.getElementById('teamsContainer');
 
         teams.forEach(team => {
