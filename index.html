@@ -9,7 +9,7 @@
       --bg: #f5f7fa;
       --card-bg: #ffffff;
       --primary: #1a237e;
-      --accent: #00acc1;
+      --accent: #1c5860;
       --score: #d84315;
       --border: #e0e0e0;
       --text: #333333;
@@ -20,6 +20,12 @@
       font-family: 'Segoe UI', sans-serif;
       background-color: var(--bg);
       color: var(--text);
+      animation: fadeInBody 1s ease-out;
+    }
+
+    @keyframes fadeInBody {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     header {
@@ -27,6 +33,7 @@
       text-align: center;
       background: #fff;
       border-bottom: 1px solid var(--border);
+      animation: slideInDown 0.8s ease-out;
     }
 
     header h1 {
@@ -34,6 +41,17 @@
       color: var(--primary);
       font-weight: 600;
       margin: 0;
+    }
+
+    @keyframes slideInDown {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
     }
 
     .teams {
@@ -53,7 +71,26 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s ease;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideFadeIn 0.7s ease forwards;
+    }
+
+    .team:nth-child(odd) { animation-delay: 0.2s; }
+    .team:nth-child(even) { animation-delay: 0.4s; }
+
+    @keyframes slideFadeIn {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .team:hover {
+      transform: scale(1.02);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
     }
 
     .team h2 {
@@ -67,6 +104,35 @@
       font-size: 2.8rem;
       font-weight: 600;
       color: var(--score);
+      transition: transform 0.3s ease;
+    }
+
+    .score.updated {
+      animation: bounceZoom 0.5s ease;
+    }
+
+    @keyframes bounceZoom {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+
+    /* 🏆 TOP TEAM STYLES with LOW OPACITY BACKGROUNDS */
+    .first {
+      background-color: rgba(255, 215, 0, 0.15); /* Gold */
+    }
+
+    .second {
+      background-color: rgba(192, 192, 192, 0.15); /* Silver */
+    }
+
+    .third {
+      background-color: rgba(205, 127, 50, 0.15); /* Bronze */
+    }
+
+    .first h2, .second h2, .third h2,
+    .first .score, .second .score, .third .score {
+      color: inherit !important;
     }
 
     @media (max-width: 768px) {
@@ -93,7 +159,8 @@
 </head>
 <body>
   <header>
-    <h1>🏆 7-Team Live Scoreboard</h1>
+    <h3 style="margin-bottom: 0px;">QAF - Quran Art Fest</h3>
+    <h1>Quran Talent - Score Board</h1>
   </header>
 
   <section class="teams" id="teamsContainer"></section>
@@ -117,8 +184,26 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const teams = ["Team A", "Team B", "Team C", "Team D", "Team E", "Team F", "Team G"];
+    const teams = [
+      "DUDU Thootha", "DNAC Koonanchery", "NIHA Pattambi",
+      "SHIA Kuttikkatoor", "MDIA Thalankara", "SHIC Parappur",
+      "DIIA Pandikkad", "AHIA Kalamassery"
+    ];
+
     const container = document.getElementById('teamsContainer');
+    const teamElements = {};
+
+    function updateLeaderboard() {
+      const allScores = [];
+
+      Object.entries(teamElements).forEach(([id, { name, scoreEl, containerEl }]) => {
+        const score = parseInt(scoreEl.textContent || "0");
+        allScores.push({ id, name, score, containerEl });
+      });
+
+      allScores.sort((a, b) => b.score - a.score);
+
+    }
 
     teams.forEach(team => {
       const teamId = team.replace(/\s/g, '_');
@@ -131,9 +216,22 @@
       `;
       container.appendChild(div);
 
+      const scoreEl = document.getElementById(`score_${teamId}`);
+
+      teamElements[teamId] = {
+        name: team,
+        scoreEl,
+        containerEl: div
+      };
+
       db.ref(`scores/${teamId}`).on('value', snapshot => {
-        const score = snapshot.val() || 0;
-        document.getElementById(`score_${teamId}`).textContent = score;
+        const newScore = snapshot.val() || 0;
+        if (scoreEl.textContent != newScore) {
+          scoreEl.textContent = newScore;
+          scoreEl.classList.add('updated');
+          setTimeout(() => scoreEl.classList.remove('updated'), 500);
+          updateLeaderboard();
+        }
       });
     });
   </script>
